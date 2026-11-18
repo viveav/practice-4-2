@@ -30,31 +30,42 @@ function mapToServer(book: Book): BookDTO {
     };
 }
 
-const DEFAULT_BOOKS: Book[] = [
-    { id: '1', title: 'TypeScript Guide', authors: ['John Doe'], year: 2024 },
-    { id: '2', title: 'JavaScript Basics', authors: ['Jane Smith'], year: 2022 },
-];
-
 export async function fetchBooks(): Promise<Book[]> {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-        return DEFAULT_BOOKS;
+
+    const response = await fetch(API_URL);
+
+
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
     }
 
-    try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-            return parsed;
-        }
-        if (parsed && Array.isArray(parsed.books)) {
-            return parsed.books;
-        }
-        return [];
-    } catch {
-        return [];
-    }
+    const dtos: BookDTO[] = await response.json();
+
+    return dtos.map(mapFromServer);
 }
 
-export async function saveBooks(books: Book[]): Promise<void> {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+// Создание книги: POST-запрос одной записи
+export async function saveBook(book: Book): Promise<Book> {
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mapToServer(book)),
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+    // Сервер вернул созданный объект с присвоенным id
+    const dto: BookDTO = await response.json();
+    return mapFromServer(dto);
+}
+
+// Удаление книги: DELETE-запрос по адресу записи
+export async function deleteBook(id: string): Promise<void> {
+    const response = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE',
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+    // Тело ответа пустое — читать нечего
 }
