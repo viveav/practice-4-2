@@ -1,6 +1,6 @@
 import {Book} from "./task1-types";
 
-const STORAGE_KEY = 'catalog';
+const API_URL = 'https://6afd87c52a9c141d36b8a2d0.mockapi.io/api/books';
 
 const DEFAULT_BOOKS: Book[] = [
     { id: '1', title: 'TypeScript Guide', authors: ['John Doe'], year: 2024 },
