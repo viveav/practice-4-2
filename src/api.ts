@@ -2,22 +2,40 @@ import {Book} from "./task1-types";
 
 const API_URL = 'https://6afd87c52a9c141d36b8a2d0.mockapi.io/api/books';
 
+interface BookDTO {
+    id: string;
+    title: string;
+    author: string;
+    year: number;
+    rating: number;
+}
+
+function mapFromServer(dto: BookDTO): Book {
+    return {
+        id: dto.id,
+        title: dto.title,
+        authors: dto.author ? [dto.author] : [],
+        year: dto.year,
+        rating: dto.rating,
+    };
+}
+
+function mapToServer(book: Book): BookDTO {
+    return {
+        id: book.id,
+        title: book.title,
+        author: book.authors[0] ?? '',
+        year: book.year,
+        rating: book.rating ?? 0,
+    };
+}
+
 const DEFAULT_BOOKS: Book[] = [
     { id: '1', title: 'TypeScript Guide', authors: ['John Doe'], year: 2024 },
     { id: '2', title: 'JavaScript Basics', authors: ['Jane Smith'], year: 2022 },
 ];
 
-export function delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export async function fetchBooks(): Promise<Book[]> {
-    await delay(800);
-
-    if (Math.random() < 0.2) {
-        throw new Error('Сбой сети. Не удалось загрузить книги.');
-    }
-
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
         return DEFAULT_BOOKS;
@@ -38,7 +56,5 @@ export async function fetchBooks(): Promise<Book[]> {
 }
 
 export async function saveBooks(books: Book[]): Promise<void> {
-    await delay(500);
-
     localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
 }
