@@ -5,7 +5,8 @@ import { createBookFromForm } from "./task4-integration";
 import { filterByTitle, sortBooks } from './task5-utils';
 import { BookCatalog } from './task6-classes';
 import { Wishlist } from './task7-wishlist';
-import { fetchBooks, saveBooks } from './mock-api';
+import { fetchBooks, saveBook, deleteBook } from "./api";
+
 
 // ============================================================
 // ИСХОДНОЕ СОСТОЯНИЕ
@@ -63,23 +64,23 @@ function createBookCard(book: Book): HTMLDivElement {
     card.append(ratingEl);
   }
 
-  // Кнопка «Удалить»
-  const deleteBtn = document.createElement('button');
-  deleteBtn.textContent = 'Удалить';
-  deleteBtn.addEventListener('click', async () => {
+// Кнопка «Удалить»
+const deleteBtn = document.createElement('button');
+deleteBtn.textContent = 'Удалить';
+deleteBtn.addEventListener('click', async () => {
     if (state.status !== 'success') return;
-    const newBooksArray = state.data.filter(b => b.id !== book.id);
     try {
-      await saveBooks(newBooksArray);
-      state = { status: 'success', data: newBooksArray };
-      render ();
+        await deleteBook(book.id);
+        const newBooksArray = state.data.filter(b => b.id !== book.id);
+        state = { status: 'success', data: newBooksArray };
+        render();
     } catch (error) {
-      errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
-    render();
-    setTimeout(() => { errorMessage = ''; render(); }, 3000);
+        errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+        render();
+        setTimeout(() => { errorMessage = ''; render(); }, 3000);
     }
-  });
-  card.append(deleteBtn);
+});
+card.append(deleteBtn);
 
   // Кнопка «Избранное» 
   const favBtn = document.createElement('button');
@@ -203,25 +204,25 @@ void initApp();
 // ОБРАБОТЧИК ФОРМЫ
 // ============================================================
 form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  if (state.status !== 'success') return;
-  try {
-    const formData = new FormData(form);
-    const newBook = createBookFromForm(formData);
-    const newBooksArray = [...state.data, newBook];
-    await saveBooks(newBooksArray);
-    state = { status: 'success', data: newBooksArray };
-    form.reset();
-     render();
-  } catch (error) {
-     errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
-    render();
+    e.preventDefault();
+    if (state.status !== 'success') return;
+    try {
+        const formData = new FormData(form);
+        const newBook = createBookFromForm(formData);
+        const savedBook = await saveBook(newBook);
+        const newBooksArray = [...state.data, savedBook];
+        state = { status: 'success', data: newBooksArray };
+        form.reset();
+        render();
+    } catch (error) {
+        errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+        render();
 
-    setTimeout(() => {
-      errorMessage = '';
-      render();
-    }, 3000);
-  }
+        setTimeout(() => {
+            errorMessage = '';
+            render();
+        }, 3000);
+    }
 });
 
 // ============================================================
